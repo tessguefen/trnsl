@@ -1,0 +1,48 @@
+<MvFUNCTION NAME = "Module_Description" PARAMETERS = "module var" STANDARDOUTPUTLEVEL = "compresswhitespace">
+	<MvASSIGN NAME = "l.module:code"		VALUE = "ps_trnsl">
+	<MvASSIGN NAME = "l.module:name"		VALUE = "Fo Jrmy">
+	<MvASSIGN NAME = "l.module:provider"	VALUE = "JRemy&Tess">
+	<MvASSIGN NAME = "l.module:version"		VALUE = "1.000">
+	<MvASSIGN NAME = "l.module:api_ver"		VALUE = "9.00">
+	<MvASSIGN NAME = "l.module:description"	VALUE = "I'll put a more descriptive description later.">
+	<MvASSIGN NAME = "l.module:features"	VALUE = "system, vis_system, data_store, json, clientside">
+</MvFUNCTION>
+
+<MvCOMMENT>
+| =============================
+| Module Installation
+| =============================
+
+sXX_PS_TRSNL_Lang
++------------------------------------+---------------+-----------------+
+|                 id                 |     code      |     prompt      |
++------------------------------------+---------------+-----------------+
+| Generated StoreKey (PS_TRSNL_Lang) | Langauge Code | Language Prompt |
++------------------------------------+---------------+-----------------+
+
+
+sXX_PS_TRSNL_Items
++------------------------------------+-----------+-------------+
+|                 id                 |   code    |   prompt    |
++------------------------------------+-----------+-------------+
+| Generated StoreKey (PS_TRSNL_Item) | Item Code | Item Prompt |
++------------------------------------+-----------+-------------+
+
+
+sXX_PS_TRSNL_TRSNLs
+**lang_id x item_id will be unique.
++---------------------------+-----------------------+-------------------+
+|          lang_id          |        item_id        |    translation    |
++---------------------------+-----------------------+-------------------+
+| Corresponding Language ID | Corresponding Item ID | Actual Text TRSNL |
++---------------------------+-----------------------+-------------------+
+
++---------------+
+|   StoreKeys   |
++---------------+
+| PS_TRSNL_Lang |
+| PS_TRSNL_Item |
++---------------+
+
+
+</MvCOMMENT>

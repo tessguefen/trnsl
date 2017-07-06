@@ -29,13 +29,13 @@ sXX_PS_TRSNL_Items
 +------------------------------------+-----------+-------------+
 
 
-sXX_PS_TRSNL_TRSNLs
+sXX_PS_TRSNL_Translations
 **lang_id x item_id will be unique.
-+---------------------------+-----------------------+-------------------+
-|          lang_id          |        item_id        |    translation    |
-+---------------------------+-----------------------+-------------------+
-| Corresponding Language ID | Corresponding Item ID | Actual Text TRSNL |
-+---------------------------+-----------------------+-------------------+
++---------------------------+-----------------------+-------------+
+|          lang_id          |       item_id         | translation |
++---------------------------+-----------------------+-------------+
+| Corresponding Language ID | Corresponding Item ID | Translation |
++---------------------------+-----------------------+-------------+
 
 +---------------+
 |   StoreKeys   |
@@ -44,5 +44,96 @@ sXX_PS_TRSNL_TRSNLs
 | PS_TRSNL_Item |
 +---------------+
 
-
 </MvCOMMENT>
+
+<MvFUNCTION NAME = "Module_Install_Store" PARAMETERS = "module var" STANDARDOUTPUTLEVEL = "compresswhitespace">
+	<MvQUERY NAME	= "Merchant"
+			 QUERY	= "{ 'CREATE TABLE ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Lang
+			 				(
+			 					id		' $ [ g.Module_Library_Native_DBAPI ].DB_Type_NUMBER( 0, 0 )	$ ',
+			 					code	' $ [ g.Module_Library_Native_DBAPI ].DB_Type_CHAR( 255 )		$ ',
+			 					prompt	' $ [ g.Module_Library_Native_DBAPI ].DB_Type_CHAR( 255 )		$ '
+			 				) ' }">
+	<MvIF EXPR = "{ g.MvQUERY_Error }">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'PS_TRSNL-INSTALL-1000:', 'An error occured while creating the table PS_TRSNL_Lang. Please make sure this table was not already created.' ) }">
+	</MvIF>
+
+
+	<MvQUERY NAME	= "Merchant"
+			 QUERY	= "{ 'CREATE TABLE ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Items
+			 				(
+			 					id		' $ [ g.Module_Library_Native_DBAPI ].DB_Type_NUMBER( 0, 0 )	$ ',
+			 					code	' $ [ g.Module_Library_Native_DBAPI ].DB_Type_CHAR( 255 )		$ ',
+			 					prompt	' $ [ g.Module_Library_Native_DBAPI ].DB_Type_CHAR( 255 )		$ '
+			 				) ' }">
+	<MvIF EXPR = "{ g.MvQUERY_Error }">
+		<MvEVAL EXPR = "{ Whoopsies(1) }">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'PS_TRSNL-INSTALL-1001:', 'An error occured while creating the table PS_TRSNL_Items. Please make sure this table was not already created.' ) }">
+	</MvIF>
+
+	<MvQUERY NAME	= "Merchant"
+			 QUERY	= "{ 'CREATE TABLE ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Translations
+			 				(
+			 					lang_id		' $ [ g.Module_Library_Native_DBAPI ].DB_Type_NUMBER( 0, 0 )	$ ',
+			 					item_id		' $ [ g.Module_Library_Native_DBAPI ].DB_Type_NUMBER( 0, 0 )	$ ',
+			 					translation	' $ [ g.Module_Library_Native_DBAPI ].DB_Type_CHAR( 255 )		$ '
+			 				) ' }">
+	<MvIF EXPR = "{ g.MvQUERY_Error }">
+		<MvEVAL EXPR = "{ Whoopsies(2) }">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'PS_TRSNL-INSTALL-1002:', 'An error occured while creating the table PS_TRSNL_Translations. Please make sure this table was not already created.' ) }">
+	</MvIF>
+
+	<MvIF EXPR = "{ NOT [ g.Module_Library_DB ].StoreKey_Insert( 'PS_TRSNL_Lang', 1 ) }">
+		<MvEVAL EXPR = "{ Whoopsies(3) }">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'PS_TRSNL-INSTALL-1003:', 'An error occured while creating the StoreKey 'PS_TRSNL_Lang'. Please make sure this table was not already created.' ) }">
+	</MvIF>
+
+	<MvIF EXPR = "{ NOT [ g.Module_Library_DB ].StoreKey_Insert( 'PS_TRSNL_Item', 1 ) }">
+		<MvEVAL EXPR = "{ Whoopsies(4) }">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'PS_TRSNL-INSTALL-1004:', 'An error occured while creating the StoreKey 'PS_TRSNL_Item'. Please make sure this table was not already created.' ) }">
+	</MvIF>
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Module_Upgrade_Store" PARAMETERS = "module var, version" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Module_Uninstall_Store" PARAMETERS = "module var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvQUERY NAME = "Merchant" QUERY = "{ 'DROP TABLE ' $  g.Store_Table_Prefix $ 'PS_TRSNL_Lang' }">
+	<MvQUERY NAME = "Merchant" QUERY = "{ 'DROP TABLE ' $  g.Store_Table_Prefix $ 'PS_TRSNL_Items' }">
+	<MvQUERY NAME = "Merchant" QUERY = "{ 'DROP TABLE ' $  g.Store_Table_Prefix $ 'PS_TRSNL_Translations' }">
+	<MvASSIGN NAME = "l.success" VALUE = "{ [ g.Module_Library_DB ].StoreKey_Delete( 'PS_TRSNL_Lang' ) }">
+	<MvASSIGN NAME = "l.success" VALUE = "{ [ g.Module_Library_DB ].StoreKey_Delete( 'PS_TRSNL_Item' ) }">
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+
+<MvCOMMENT>
+| =============================
+| Custom Module Functions
+| =============================
+|
+|	Whoopsies( step )
+|
+| =============================
+</MvCOMMENT>
+
+
+<MvFUNCTION NAME = "Whoopsies" PARAMETERS = "step">
+	<MvIF EXPR = "l.step GE 1">
+		<MvQUERY NAME = "Merchant" QUERY = "{ 'DROP TABLE ' $  g.Store_Table_Prefix $ 'PS_TRSNL_Lang' }">
+	</MvIF>
+	<MvIF EXPR = "l.step GE 2">
+		<MvQUERY NAME = "Merchant" QUERY = "{ 'DROP TABLE ' $  g.Store_Table_Prefix $ 'PS_TRSNL_Items' }">
+	</MvIF>
+	<MvIF EXPR = "l.step GE 3">
+		<MvQUERY NAME = "Merchant" QUERY = "{ 'DROP TABLE ' $  g.Store_Table_Prefix $ 'PS_TRSNL_Translations' }">
+	</MvIF>
+	<MvIF EXPR = "l.step GE 3">
+		<MvASSIGN NAME = "l.success" VALUE = "{ [ g.Module_Library_DB ].StoreKey_Delete( 'PS_TRSNL_Lang' ) }">
+	</MvIF>
+	<MvIF EXPR = "l.step GE 4">
+		<MvASSIGN NAME = "l.success" VALUE = "{ [ g.Module_Library_DB ].StoreKey_Delete( 'PS_TRSNL_Item' ) }">
+	</MvIF>
+</MvFUNCTION>

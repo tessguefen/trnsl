@@ -1,11 +1,11 @@
 <MvFUNCTION NAME = "Module_Description" PARAMETERS = "module var" STANDARDOUTPUTLEVEL = "compresswhitespace">
 	<MvASSIGN NAME = "l.module:code"		VALUE = "ps_trnsl">
-	<MvASSIGN NAME = "l.module:name"		VALUE = "Fo Jrmy">
+	<MvASSIGN NAME = "l.module:name"		VALUE = "PS Translation Items">
 	<MvASSIGN NAME = "l.module:provider"	VALUE = "JRemy&Tess">
 	<MvASSIGN NAME = "l.module:version"		VALUE = "1.000">
 	<MvASSIGN NAME = "l.module:api_ver"		VALUE = "9.00">
-	<MvASSIGN NAME = "l.module:description"	VALUE = "I'll put a more descriptive description later.">
-	<MvASSIGN NAME = "l.module:features"	VALUE = "system, vis_system, data_store, json, clientside">
+	<MvASSIGN NAME = "l.module:description"	VALUE = "Super Amazing Magic Languages and stuff">
+	<MvASSIGN NAME = "l.module:features"	VALUE = "system, vis_system, component, data_store, json, clientside">
 </MvFUNCTION>
 
 <MvCOMMENT>
@@ -85,12 +85,16 @@ sXX_PS_TRSNL_Translations
 
 	<MvIF EXPR = "{ NOT [ g.Module_Library_DB ].StoreKey_Insert( 'PS_TRSNL_Lang', 1 ) }">
 		<MvEVAL EXPR = "{ Whoopsies(3) }">
-		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'PS_TRSNL-INSTALL-1003:', 'An error occured while creating the StoreKey 'PS_TRSNL_Lang'. Please make sure this table was not already created.' ) }">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'PS_TRSNL-INSTALL-1003:', 'An error occured while creating the StoreKey \'PS_TRSNL_Lang\'. Please make sure this table was not already created.' ) }">
 	</MvIF>
 
 	<MvIF EXPR = "{ NOT [ g.Module_Library_DB ].StoreKey_Insert( 'PS_TRSNL_Item', 1 ) }">
 		<MvEVAL EXPR = "{ Whoopsies(4) }">
-		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'PS_TRSNL-INSTALL-1004:', 'An error occured while creating the StoreKey 'PS_TRSNL_Item'. Please make sure this table was not already created.' ) }">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'PS_TRSNL-INSTALL-1004:', 'An error occured while creating the StoreKey \'PS_TRSNL_Item\'. Please make sure this table was not already created.' ) }">
+	</MvIF>
+
+	<MvIF EXPR = "{ NOT [ g.Module_Feature_TUI_MGR ].TemplateManager_Create_Item( 'ps_trnsl',  l.module:code ) }">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'PS_TRSNL-INSTALL-1005:', 'An error occured while creating the item ps_trnsl.' ) }">
 	</MvIF>
 	<MvFUNCTIONRETURN VALUE = 1>
 </MvFUNCTION>
@@ -108,6 +112,176 @@ sXX_PS_TRSNL_Translations
 	<MvFUNCTIONRETURN VALUE = 1>
 </MvFUNCTION>
 
+<MvCOMMENT>
+| ============================
+| System Extensions Feature (vis_system)
+| ============================
+</MvCOMMENT>
+
+<MvFUNCTION NAME = "SystemModule_Action" PARAMETERS = "module var, action" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "SystemModule_Screen" PARAMETERS = "module var, screen" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "SystemModule_UIException" PARAMETERS = "module var, exception" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+
+<MvCOMMENT>
+| ============================
+| System Extension Settings Screen Feature (vis_system)
+| ============================
+</MvCOMMENT>
+
+<MvFUNCTION NAME = "Module_System_Tabs" PARAMETERS = "module var" STANDARDOUTPUTLEVEL = "">
+	<MvFUNCTIONRETURN VALUE = "ps_trnsl_languages:PST: Languages,ps_trnsl_items:PST: Items">
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Module_System_Head" PARAMETERS = "module var, tab" STANDARDOUTPUTLEVEL = "text, html">
+	<MvIF EXPR = "{ NOT ( 'ps_trnsl_' CIN l.tab ) }">
+		<MvFUNCTIONRETURN VALUE = 1>
+	</MvIF>
+
+	<MvIF EXPR = "{ l.tab EQ 'ps_trnsl_languages' }">
+		<script language="JavaScript" src="{ g.clientside_url $ 'Module_Code=' $ encodeattribute( l.module:code ) $ '&Filename=Languages_Functions.js' }"></script>
+		<script language="JavaScript" src="{ g.clientside_url $ 'Module_Code=' $ encodeattribute( l.module:code ) $ '&Filename=Languages_Batchlist.js' }"></script>
+		<script language="JavaScript">
+			MMScreen_LoadFinished( function() { new Languages_Batchlist(); } );
+		</script>
+	</MvIF>
+
+	<MvIF EXPR = "{ l.tab EQ 'ps_trnsl_items' }">
+		<script language="JavaScript" src="{ g.clientside_url $ 'Module_Code=' $ encodeattribute( l.module:code ) $ '&Filename=Items_Functions.js' }"></script>
+		<script language="JavaScript" src="{ g.clientside_url $ 'Module_Code=' $ encodeattribute( l.module:code ) $ '&Filename=Items_Batchlist.js' }"></script>
+		<script language="JavaScript">
+			MMScreen_LoadFinished( function() { new Items_Batchlist(); } );
+		</script>
+	</MvIF>
+
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Module_System_Content" PARAMETERS = "module var, tab, load_fields" STANDARDOUTPUTLEVEL = "text, html, compresswhitespace">
+	<MvIF EXPR = "{ NOT ( 'ps_trnsl_' CIN l.tab ) }">
+		<MvFUNCTIONRETURN VALUE = 1>
+	</MvIF>
+
+	<MvEVAL EXPR = "{ [ g.Module_Admin ].Element_MMBatchList_HTML() }">
+
+	<MvIF EXPR = "{ l.tab EQ 'ps_trnsl_languages' }">
+		<div id="Languages_Batchlist"></div>
+	</MvIF>
+
+	<MvIF EXPR = "{ l.tab EQ 'ps_trnsl_items' }">
+		<div id="Items_Batchlist"></div>
+	</MvIF>
+
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Module_System_Validate" PARAMETERS = "module var" STANDARDOUTPUTLEVEL = "">
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Module_System_Update" PARAMETERS = "module var" STANDARDOUTPUTLEVEL = "">
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+
+
+<MvCOMMENT>
+| ============================
+| Component Feature (component)
+| ============================
+</MvCOMMENT>
+
+<MvFUNCTION NAME = "ComponentModule_Content" PARAMETERS = "module var, item, tab, load_fields, field_prefix, fields var, settings var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "ComponentModule_Defaults" PARAMETERS = "module var, settings var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "ComponentModule_Initialize" PARAMETERS = "module var, item, all_settings var, settings var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "ComponentModule_Page_Assign" PARAMETERS = "module var, page var, item, settings var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "ComponentModule_Page_Unassign" PARAMETERS = "module var, page var, item, settings var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "ComponentModule_Prerender" PARAMETERS = "module var, item, all_settings var, settings var, param" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "ComponentModule_Render_End" PARAMETERS = "module var, item, all_settings var, settings var, param" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "ComponentModule_Render_Start" PARAMETERS = "module var, item, all_settings var, settings var, param" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "ComponentModule_Tabs" PARAMETERS = "module var, item, settings var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "ComponentModule_Update" PARAMETERS = "module var, item, field_prefix, fields var, settings var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "ComponentModule_Validate" PARAMETERS = "module var, item, field_prefix, fields var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+
+
+<MvCOMMENT>
+| ============================
+| JavaScript Object Notation Feature (json)
+| ============================
+</MvCOMMENT>
+
+<MvFUNCTION NAME = "Module_JSON" PARAMETERS = "module var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvIF EXPR = "{ g.Module_Function EQ 'Language_Load_All' }">
+		<MvEVAL EXPR = "{ JSON_Load_Languages() }">
+	</MvIF>
+	<MvIF EXPR = "{ g.Module_Function EQ 'Language_Insert' }">
+		<MvFUNCTIONRETURN VALUE = "{ JSON_Add_Language( g.code, g.prompt) }">
+	</MvIF>
+</MvFUNCTION>
+
+
+
+<MvCOMMENT>
+| ============================
+| Client Side Feature (clienside)
+| ============================
+</MvCOMMENT>
+<MvFUNCTION NAME = "Module_Clientside" PARAMETERS = "module var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvIF EXPR = "{ g.Filename EQ 'Languages_Functions.js' }">
+		<MvEVAL EXPR = "{ [ g.Module_Clientside ].Module_Content_Type( l.module, 'text/javascript' ) }">
+		<MIVA STANDARDOUTPUTLEVEL = "text, html"><MvINCLUDE FILE = "js/Languages_Functions.js"><MIVA STANDARDOUTPUTLEVEL = "">
+	<MvELSEIF EXPR = "{ g.Filename EQ 'Languages_Batchlist.js' }">
+		<MvEVAL EXPR = "{ [ g.Module_Clientside ].Module_Content_Type( l.module, 'text/javascript' ) }">
+		<MIVA STANDARDOUTPUTLEVEL = "text, html"><MvINCLUDE FILE = "js/Languages_Batchlist.js"><MIVA STANDARDOUTPUTLEVEL = "">
+	<MvELSEIF EXPR = "{ g.Filename EQ 'Items_Functions.js' }">
+		<MvEVAL EXPR = "{ [ g.Module_Clientside ].Module_Content_Type( l.module, 'text/javascript' ) }">
+		<MIVA STANDARDOUTPUTLEVEL = "text, html"><MvINCLUDE FILE = "js/Items_Functions.js"><MIVA STANDARDOUTPUTLEVEL = "">
+	<MvELSEIF EXPR = "{ g.Filename EQ 'Items_Batchlist.js' }">
+		<MvEVAL EXPR = "{ [ g.Module_Clientside ].Module_Content_Type( l.module, 'text/javascript' ) }">
+		<MIVA STANDARDOUTPUTLEVEL = "text, html"><MvINCLUDE FILE = "js/Items_Batchlist.js"><MIVA STANDARDOUTPUTLEVEL = "">
+	<MvELSE>
+		<MvASSIGN NAME = "l.success"	VALUE = "{ miva_output_header( 'Status', '404 Not Found' ) }">
+	</MvIF>
+</MvFUNCTION>
+
+
+
 
 <MvCOMMENT>
 | =============================
@@ -115,6 +289,10 @@ sXX_PS_TRSNL_Translations
 | =============================
 |
 |	Whoopsies( step )
+|	JSON_Load_Languages()
+|	Load_Language_Code( code, language var )
+|	Add_Language( code, prompt )
+|	JSON_Add_Language( code, prompt)
 |
 | =============================
 </MvCOMMENT>
@@ -136,4 +314,129 @@ sXX_PS_TRSNL_Translations
 	<MvIF EXPR = "l.step GE 4">
 		<MvASSIGN NAME = "l.success" VALUE = "{ [ g.Module_Library_DB ].StoreKey_Delete( 'PS_TRSNL_Item' ) }">
 	</MvIF>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "JSON_Load_Languages" STANDARDOUTPUTLEVEL = "text, compresswhitespace">
+	<MvASSIGN NAME = "g.Filter" VALUE = "{ trim( g.Filter ) }">
+	<MvASSIGN NAME = "g.Sort" VALUE = "{ trim( g.Sort ) }">
+	<MvASSIGN NAME = "g.Offset" VALUE = "{ trim( g.Offset ) }">
+	<MvASSIGN NAME = "g.Count" VALUE = "{ trim( g.Count ) }">
+	<MvASSIGN NAME = "l.search_query" VALUE = "">
+
+	<MvEVAL EXPR = "{ [ g.Module_Library_DB ].SQL_Query_SELECT( l.search_query,'s.*' ) }">
+
+	<MvEVAL EXPR = "{ [ g.Module_Library_DB ].SQL_Query_FROM( l.search_query, g.Store_Table_Prefix $ 'PS_TRSNL_Lang', 's' ) }">
+
+	<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Filter( l.search_query, g.Filter,'id:s.id,prompt:s.prompt' ) }">
+
+	<MvEVAL EXPR = "{ [ g.Module_Library_DB ].SQL_Query_OrderBy_Fields(l.search_query, g.Sort, 'id:s.id,code:s.code,prompt:s.prompt', 's.id' ) }">
+
+	<MvASSIGN NAME = "l.search_sql" VALUE = "{ [ g.Module_Library_DB].SQL_Query_Build( l.search_query, l.search_fields ) }">
+
+	<MvIF EXPR = "{ NOT [ g.Module_Library_DB ].SQL_Query_Count( l.search_query, l.total_count ) }">
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Lang">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Error(g.Error_Code, g.Error_Message ) }">
+	<MvELSEIF EXPR = "{ NOT [ g.Module_Library_Native_DBAPI ].DB_OPENVIEW_Range('Merchant', 'PS_TRSNL_Lang', l.search_sql, l.search_fields, g.Offset, g.Count) }">
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Lang">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Error( 'ps_trsnl-JSON-1001',g.MvOPENVIEW_Error ) }">
+	</MvIF>
+
+	<MvASSIGN NAME = "l.count" VALUE = 0>
+
+	<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Response_Start() }">
+		{
+			"data":
+				[
+					<MvWHILE EXPR = "{ ( NOT PS_TRSNL_Lang.d.EOF ) AND ( ( g.Count EQ 0 ) OR (l.count LT g.Count ) ) }">
+					<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_ArrayElement_Start( l.count )}">
+					"id": 		<MvEVAL EXPR = "{ int( PS_TRSNL_Lang.d.id ) }">,
+					"code" : 	"<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Encode( PS_TRSNL_Lang.d.code ) }">",
+					"prompt" : 	"<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Encode( PS_TRSNL_Lang.d.prompt ) }">"
+					<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_ArrayElement_End() }">
+					<MvSKIP NAME = "Merchant" VIEW = "PS_TRSNL_Lang" ROWS = 1>
+					</MvWHILE>
+				],
+
+			"total_count": <MvEVAL EXPR = "{ int( l.total_count ) }">,
+			"start_offset": <MvEVAL EXPR = "{ int( g.Offset ) }">
+		}
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Lang">
+	}
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Load_Language_Code" PARAMETERS = "code, language var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvASSIGN NAME = "l.code" VALUE = "{ trim( l.code ) }">
+	<MvOPENVIEW	NAME	= "Merchant"
+				VIEW	= "PS_TRSNL_Lang"
+				QUERY	= "{ 'SELECT * FROM ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Lang WHERE code = ?'}"
+				FIELDS	= "l.code">
+	<MvIF EXPR = "{ g.MvOPENVIEW_Error }">
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Lang">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'ps_trsnl-LANG-1001:', 'An Error occured while trying to load a lanaguage code.' ) }">
+	</MvIF>
+
+	<MvASSIGN NAME = "l.language" MEMBER = "id" VALUE = "{ PS_TRSNL_Lang.d.id }">
+	<MvASSIGN NAME = "l.language" MEMBER = "code" VALUE = "{ PS_TRSNL_Lang.d.code }">
+	<MvASSIGN NAME = "l.language" MEMBER = "prompt" VALUE = "{ PS_TRSNL_Lang.d.prompt }">
+
+	<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Lang">
+
+	<MvIF EXPR = "{ l.language:id LT 1 }">
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Add_Language" PARAMETERS = "code, prompt" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvASSIGN NAME = "l.code" VALUE = "{ trim( l.code ) }">
+	<MvASSIGN NAME = "l.prompt" VALUE = "{ trim( l.prompt ) }">
+
+	<MvIF EXPR = "{ ISNULL l.code }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "Code may not be empty." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvIF EXPR = "{ ISNULL l.prompt }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "prompt" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "Prompt may not be empty." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvIF EXPR = "{ NOT [ g.Module_Admin ].Validate_Code( l.code ) }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "{ g.Validation_Message }" />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvIF EXPR = "{ Load_Language_Code( l.code, l.language ) }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "A language with that code already exists." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvASSIGN NAME = "l.id" VALUE = "{ [ g.Module_Library_DB ].StoreKey_Generate( 'PS_TRSNL_Lang' ) }">
+
+	<MvQUERY	NAME	= "Merchant"
+				QUERY	= "{ 'INSERT INTO ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Lang
+							(id, code, prompt)
+							VALUES
+							(?, ?, ?)' }"
+				FIELDS = "l.id, l.code, l.prompt">
+
+	<MvIF EXPR = "{ g.MvQUERY_Error }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "'An error has occured.'" />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "JSON_Add_Language" PARAMETERS = "code, prompt" STANDARDOUTPUTLEVEL = "">
+	<MvIF EXPR = "{ Add_Language( code, prompt ) }">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Success() }">
+	</MvIF>
+	<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_FieldError( g.Error_Code, g.Error_Message ) }">
 </MvFUNCTION>

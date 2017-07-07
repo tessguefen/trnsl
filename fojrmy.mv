@@ -225,6 +225,10 @@ sXX_PS_TRSNL_Translations
 </MvFUNCTION>
 
 <MvFUNCTION NAME = "ComponentModule_Render_Start" PARAMETERS = "module var, item, all_settings var, settings var, param" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvASSIGN NAME = "l.param" VALUE = "{ trim( l.param ) }">
+	<MvIF EXPR = "{ Load_Item_Code( l.param, l.item ) }">
+		<MvEVAL EXPR = "{ l.item:prompt }">
+	</MvIF>
 </MvFUNCTION>
 
 <MvFUNCTION NAME = "ComponentModule_Tabs" PARAMETERS = "module var, item, settings var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">

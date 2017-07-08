@@ -1,0 +1,243 @@
+<MvCOMMENT>
+|	JSON_Load_Items()
+|	Load_Item_ID( id, item var )
+|	Load_Item_Code( code, item var )
+|	Add_Item( code, prompt )
+|	JSON_Add_Item( code, prompt)
+|	Delete_Item( id )
+|	JSON_Delete_Item( id )
+|	Item_Update( id, code, prompt )
+|	JSON_Item_Update( id, code, prompt )
+</MvCOMMENT>
+
+
+
+<MvFUNCTION NAME = "JSON_Load_Items" STANDARDOUTPUTLEVEL = "text, compresswhitespace">
+	<MvASSIGN NAME = "g.Filter" VALUE = "{ trim( g.Filter ) }">
+	<MvASSIGN NAME = "g.Sort" VALUE = "{ trim( g.Sort ) }">
+	<MvASSIGN NAME = "g.Offset" VALUE = "{ trim( g.Offset ) }">
+	<MvASSIGN NAME = "g.Count" VALUE = "{ trim( g.Count ) }">
+	<MvASSIGN NAME = "l.search_query" VALUE = "">
+
+	<MvEVAL EXPR = "{ [ g.Module_Library_DB ].SQL_Query_SELECT( l.search_query,'s.*' ) }">
+
+	<MvEVAL EXPR = "{ [ g.Module_Library_DB ].SQL_Query_FROM( l.search_query, g.Store_Table_Prefix $ 'PS_TRSNL_Items', 's' ) }">
+
+	<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Filter( l.search_query, g.Filter,'id:s.id,prompt:s.prompt' ) }">
+
+	<MvEVAL EXPR = "{ [ g.Module_Library_DB ].SQL_Query_OrderBy_Fields(l.search_query, g.Sort, 'id:s.id,code:s.code,prompt:s.prompt', 's.id' ) }">
+
+	<MvASSIGN NAME = "l.search_sql" VALUE = "{ [ g.Module_Library_DB].SQL_Query_Build( l.search_query, l.search_fields ) }">
+
+	<MvIF EXPR = "{ NOT [ g.Module_Library_DB ].SQL_Query_Count( l.search_query, l.total_count ) }">
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Items">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Error(g.Error_Code, g.Error_Message ) }">
+	<MvELSEIF EXPR = "{ NOT [ g.Module_Library_Native_DBAPI ].DB_OPENVIEW_Range('Merchant', 'PS_TRSNL_Items', l.search_sql, l.search_fields, g.Offset, g.Count) }">
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Items">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Error( 'ps_trsnl-JSON-1001',g.MvOPENVIEW_Error ) }">
+	</MvIF>
+
+	<MvASSIGN NAME = "l.count" VALUE = 0>
+
+	<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Response_Start() }">
+		{
+			"data":
+				[
+					<MvWHILE EXPR = "{ ( NOT PS_TRSNL_Items.d.EOF ) AND ( ( g.Count EQ 0 ) OR (l.count LT g.Count ) ) }">
+					<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_ArrayElement_Start( l.count )}">
+					"id": 		<MvEVAL EXPR = "{ int( PS_TRSNL_Items.d.id ) }">,
+					"code" : 	"<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Encode( PS_TRSNL_Items.d.code ) }">",
+					"prompt" : 	"<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Encode( PS_TRSNL_Items.d.prompt ) }">"
+					<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_ArrayElement_End() }">
+					<MvSKIP NAME = "Merchant" VIEW = "PS_TRSNL_Items" ROWS = 1>
+					</MvWHILE>
+				],
+
+			"total_count": <MvEVAL EXPR = "{ int( l.total_count ) }">,
+			"start_offset": <MvEVAL EXPR = "{ int( g.Offset ) }">
+		}
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Items">
+	}
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Load_Item_ID" PARAMETERS = "id, item var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvASSIGN NAME = "l.ID" VALUE = "{ trim( l.ID ) }">
+	<MvOPENVIEW	NAME	= "Merchant"
+				VIEW	= "PS_TRSNL_Items"
+				QUERY	= "{ 'SELECT * FROM ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Items WHERE ID = ?'}"
+				FIELDS	= "l.ID">
+	<MvIF EXPR = "{ g.MvOPENVIEW_Error }">
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Items">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'ps_trsnl-ITEM-1001:', 'An Error occured while trying to load a Item ID.' ) }">
+	</MvIF>
+
+	<MvASSIGN NAME = "l.item" MEMBER = "id" VALUE = "{ PS_TRSNL_Items.d.id }">
+	<MvASSIGN NAME = "l.item" MEMBER = "code" VALUE = "{ PS_TRSNL_Items.d.code }">
+	<MvASSIGN NAME = "l.item" MEMBER = "prompt" VALUE = "{ PS_TRSNL_Items.d.prompt }">
+
+	<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Items">
+
+	<MvIF EXPR = "{ l.item:id LT 1 }">
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Load_Item_Code" PARAMETERS = "code, item var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvASSIGN NAME = "l.code" VALUE = "{ trim( l.code ) }">
+	<MvOPENVIEW	NAME	= "Merchant"
+				VIEW	= "PS_TRSNL_Items"
+				QUERY	= "{ 'SELECT * FROM ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Items WHERE code = ?'}"
+				FIELDS	= "l.code">
+	<MvIF EXPR = "{ g.MvOPENVIEW_Error }">
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Items">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'ps_trsnl-ITEM-1002:', 'An Error occured while trying to load an Item code.' ) }">
+	</MvIF>
+
+	<MvASSIGN NAME = "l.item" MEMBER = "id" VALUE = "{ PS_TRSNL_Items.d.id }">
+	<MvASSIGN NAME = "l.item" MEMBER = "code" VALUE = "{ PS_TRSNL_Items.d.code }">
+	<MvASSIGN NAME = "l.item" MEMBER = "prompt" VALUE = "{ PS_TRSNL_Items.d.prompt }">
+
+	<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Items">
+
+	<MvIF EXPR = "{ l.item:id LT 1 }">
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Add_Item" PARAMETERS = "code, prompt" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+	<MvASSIGN NAME = "l.code" VALUE = "{ trim( l.code ) }">
+	<MvASSIGN NAME = "l.prompt" VALUE = "{ trim( l.prompt ) }">
+
+	<MvIF EXPR = "{ ISNULL l.code }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "Code may not be empty." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvIF EXPR = "{ ISNULL l.prompt }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "prompt" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "Prompt may not be empty." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvIF EXPR = "{ NOT [ g.Module_Admin ].Validate_Code( l.code ) }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "{ g.Validation_Message }" />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvIF EXPR = "{ Load_Item_Code( l.code, l.item ) }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "A Item with that code already exists." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvASSIGN NAME = "l.id" VALUE = "{ [ g.Module_Library_DB ].StoreKey_Generate( 'PS_TRSNL_Item' ) }">
+
+	<MvQUERY	NAME	= "Merchant"
+				QUERY	= "{ 'INSERT INTO ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Items
+							(id, code, prompt)
+							VALUES
+							(?, ?, ?)' }"
+				FIELDS = "l.id, l.code, l.prompt">
+
+	<MvIF EXPR = "{ g.MvQUERY_Error }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "An error has occured." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "JSON_Add_Item" PARAMETERS = "code, prompt" STANDARDOUTPUTLEVEL = "">
+	<MvIF EXPR = "{ Add_Item( l.code, l.prompt ) }">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Success() }">
+	</MvIF>
+	<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_FieldError( g.Error_Code, g.Error_Message ) }">
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Item_Delete" PARAMETERS = "id" STANDARDOUTPUTLEVEL = "">
+	<MvQUERY NAME 	= "Merchant"
+			 QUERY 	= "{ 'DELETE FROM ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Items WHERE id = ?' }"
+			 FIELDS = "l.id">
+	<MvIF EXPR = "{ g.MvQUERY_Error }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "An error has occured." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "JSON_Delete_Item" PARAMETERS = "id" STANDARDOUTPUTLEVEL = "">
+	<MvIF EXPR = "{ Item_Delete( l.id ) }">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Success() }">
+	</MvIF>
+	<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_FieldError( g.Error_Code, g.Error_Message ) }">
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Item_Update" PARAMETERS = "id, code, prompt" STANDARDOUTPUTLEVEL = "">
+	<MvASSIGN NAME = "l.id" VALUE = "{ trim( l.id ) }">
+	<MvASSIGN NAME = "l.code" VALUE = "{ trim( l.code ) }">
+	<MvASSIGN NAME = "l.prompt" VALUE = "{ trim( l.prompt ) }">
+
+	<MvIF EXPR = "{ NOT ( Load_Item_ID( l.id, l.item ) ) }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "{ 'Can not load Item with an id of ' $ l.id }" />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvIF EXPR = "{ ISNULL l.code }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "Code may not be empty." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvIF EXPR = "{ ISNULL l.prompt }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "prompt" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "Prompt may not be empty." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvIF EXPR = "{ NOT [ g.Module_Admin ].Validate_Code( l.code ) }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "{ g.Validation_Message }" />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvIF EXPR = "{ l.code NE l.item:code }">
+		<MvIF EXPR = "{ Load_Item_Code( l.code, l.item_check ) }">
+			<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+			<MvASSIGN NAME = "g.Error_Message" VALUE = "A Item with that code already exists." />
+			<MvFUNCTIONRETURN VALUE = 0>
+		</MvIF>
+	</MvIF>
+
+	<MvQUERY	NAME	= "Merchant"
+				QUERY	= "{ 'UPDATE ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Items
+								SET
+									code = ?,
+									prompt = ?
+								WHERE
+									id = ?' }"
+				FIELDS	= "l.code, l.prompt, l.id">
+
+	<MvIF EXPR = "{ g.MvQUERY_Error }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "{ 'An error has occured: ' $ g.MvQUERY_Error }" />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "JSON_Item_Update" PARAMETERS = "id, code, prompt" STANDARDOUTPUTLEVEL = "">
+	<MvIF EXPR = "{ Item_Update( l.id, l.code, l.prompt ) }">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Success() }">
+	</MvIF>
+	<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_FieldError( g.Error_Code, g.Error_Message ) }">
+</MvFUNCTION>

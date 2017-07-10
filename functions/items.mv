@@ -2,14 +2,13 @@
 |	JSON_Load_Items()
 |	Load_Item_ID( id, item var )
 |	Load_Item_Code( code, item var )
-|	Add_Item( code, prompt )
+|	Add_Item( code, prompt, translations )
 |	JSON_Add_Item( code, prompt)
 |	Delete_Item( id )
 |	JSON_Delete_Item( id )
-|	Item_Update( id, code, prompt )
-|	JSON_Item_Update( id, code, prompt )
+|	Item_Update( id, code, prompt, translations )
+|	JSON_Item_Update( id, code, prompt, translations )
 </MvCOMMENT>
-
 
 <MvFUNCTION NAME = "JSON_Load_Items" STANDARDOUTPUTLEVEL = "text, compresswhitespace">
 	<MvASSIGN NAME = "g.Filter" VALUE = "{ trim( g.Filter ) }">
@@ -67,6 +66,7 @@
 	}
 </MvFUNCTION>
 
+
 <MvFUNCTION NAME = "Load_Item_ID" PARAMETERS = "id, item var" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
 	<MvASSIGN NAME = "l.ID" VALUE = "{ trim( l.ID ) }">
 	<MvOPENVIEW	NAME	= "Merchant"
@@ -115,7 +115,7 @@
 	<MvFUNCTIONRETURN VALUE = 1>
 </MvFUNCTION>
 
-<MvFUNCTION NAME = "Add_Item" PARAMETERS = "code, prompt" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
+<MvFUNCTION NAME = "Add_Item" PARAMETERS = "code, prompt, translations" STANDARDOUTPUTLEVEL = "" ERROROUTPUTLEVEL = "">
 	<MvASSIGN NAME = "l.code" VALUE = "{ trim( l.code ) }">
 	<MvASSIGN NAME = "l.prompt" VALUE = "{ trim( l.prompt ) }">
 
@@ -158,11 +158,33 @@
 		<MvFUNCTIONRETURN VALUE = 0>
 	</MvIF>
 
+	<MvFOREACH ITERATOR = "l.translation" ARRAY = "l.translations">
+		<MvASSIGN NAME = "l.translation_code" VALUE = "">
+		<MvASSIGN NAME = "l.success" VALUE = "{ miva_struct_members( l.translation, l.translation_code) }">
+		<MvASSIGN NAME = "l.translation_code" VALUE = "{ l.translation_code[1] }">
+
+		<MvIF EXPR = "{ ISNULL l.translation_code }">
+			<MvFOREACHCONTINUE />
+		</MvIF>
+
+		<MvASSIGN NAME = "l.value" VALUE = "{ miva_variable_value( 'l.translation:' $ l.translation_code ) }">
+		<MvIF EXPR = "{ NOT Load_Language_Code( l.translation_code, l.language) }">
+			<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+			<MvASSIGN NAME = "g.Error_Message" VALUE = "{ g.Error_Message }" />
+			<MvFUNCTIONRETURN VALUE = 0 />
+		</MvIF>
+		<MvIF EXPR = "{ NOT Update_Translation( l.language:id, l.id, l.value ) }">
+			<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+			<MvASSIGN NAME = "g.Error_Message" VALUE = "{ g.Error_Message }" />
+			<MvFUNCTIONRETURN VALUE = 0 />
+		</MvIF>
+	</MvFOREACH>
+	
 	<MvFUNCTIONRETURN VALUE = 1>
 </MvFUNCTION>
 
-<MvFUNCTION NAME = "JSON_Add_Item" PARAMETERS = "code, prompt" STANDARDOUTPUTLEVEL = "">
-	<MvIF EXPR = "{ Add_Item( l.code, l.prompt ) }">
+<MvFUNCTION NAME = "JSON_Add_Item" PARAMETERS = "code, prompt, translations" STANDARDOUTPUTLEVEL = "">
+	<MvIF EXPR = "{ Add_Item( l.code, l.prompt, l.translations ) }">
 		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Success() }">
 	</MvIF>
 	<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_FieldError( g.Error_Code, g.Error_Message ) }">

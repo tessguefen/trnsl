@@ -268,7 +268,7 @@ sXX_PS_TRSNL_Translations
 		<MvEVAL EXPR = "{ JSON_Load_Items() }">
 	</MvIF>
 	<MvIF EXPR = "{ g.Module_Function EQ 'Item_Insert' }">
-		<MvFUNCTIONRETURN VALUE = "{ JSON_Add_Item( g.code, g.prompt) }">
+		<MvFUNCTIONRETURN VALUE = "{ JSON_Add_Item( g.code, g.prompt, g.Language) }">
 	</MvIF>
 	<MvIF EXPR = "{ g.Module_Function EQ 'Item_Delete' }">
 		<MvFUNCTIONRETURN VALUE = "{ JSON_Delete_Item( g.Item_Id) }">

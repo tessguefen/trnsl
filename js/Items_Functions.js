@@ -1,3 +1,12 @@
+// Load Languages
+function Load_Languages_JSON_Columns( callback, delegator ) {
+	return AJAX_Call_Module(	callback,
+								'admin',
+								'ps_trnsl',
+								'Load_Languages_JSON_Columns',
+								delegator );
+}
+
 function Items_List_Load_Query( filter, sort, offset, count, callback, delegator ) {
 	return AJAX_Call_Module(	callback,
 								'admin',

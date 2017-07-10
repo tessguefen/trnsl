@@ -1,0 +1,124 @@
+<MvFUNCTION NAME = "Load_Translation_Language_Code" PARAMETERS = "language_code, item_id, translation var" STANDARDOUTPUTLEVEL = "text, compresswhitespace">
+	<MvASSIGN NAME = "l.language_code" VALUE = "{ trim(l.language_code) }">
+	<MvASSIGN NAME = "l.item_id" VALUE = "{ trim(l.item_id) }">
+
+	<MvIF EXPR = "{ NOT Load_Language_Code( l.language_code, l.language ) }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "{ 'The Language (' $ l.language_code $ ') can not be found.' }" />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+	
+	<MvFUNCTIONRETURN VALUE = "{ Load_Translation_Language_ID( l.language:id, l.item_id, l.translation) }" />
+</MvFUNCTION>
+ 
+<MvFUNCTION NAME = "Load_Translation_Language_ID" PARAMETERS = "language_id, item_id, translation var" STANDARDOUTPUTLEVEL = "text, compresswhitespace">
+	<MvASSIGN NAME = "l.language_id" VALUE = "{ trim(l.language_id) }">
+	<MvASSIGN NAME = "l.item_id" VALUE = "{ trim(l.item_id) }">
+
+	<MvIF EXPR = "{ NOT Load_Language_ID( l.language_id, l.language ) }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "That Language can not be found." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+	
+	<MvOPENVIEW	NAME	= "Merchant"
+				VIEW	= "PS_TRSNL_Translations"
+				QUERY	= "{ 'SELECT * FROM ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Translations WHERE lang_id = ? AND item_id = ?'}"
+				FIELDS	= "l.language_id, l.item_id">
+	<MvIF EXPR = "{ g.MvOPENVIEW_Error }">
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Translations">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'ps_trsnl-LANG-1001:', 'An Error occured while trying to load a lanaguage ID.' ) }">
+	</MvIF>
+
+	<MvASSIGN NAME = "l.translation" MEMBER = "lang_id" VALUE = "{ PS_TRSNL_Translations.d.lang_id }">
+	<MvASSIGN NAME = "l.translation" MEMBER = "lang_code" VALUE = "{ l.language:code }">
+	<MvASSIGN NAME = "l.translation" MEMBER = "item_id" VALUE = "{ PS_TRSNL_Translations.d.item_id }">
+	<MvASSIGN NAME = "l.translation" MEMBER = "translation " VALUE = "{ PS_TRSNL_Translations.d.translation  }">
+
+	<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Translations">
+	<MvFUNCTIONRETURN VALUE = "{ l.translation }">
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Update_Translation" PARAMETERS = "lang_id, item_id, value" STANDARDOUTPUTLEVEL = "">
+	<MvASSIGN NAME = "l.lang_id" VALUE = "{ trim( l.lang_id ) }">
+	<MvASSIGN NAME = "l.item_id" VALUE = "{ trim( l.item_id ) }">
+
+	<MvIF EXPR = "{ NOT Load_Language_ID( l.lang_id, l.language ) }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "{ 'The Language (' $ l.lang_id $ ') can not be found.' }" />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvIF EXPR = "{ NOT Load_Item_ID( l.item_id, l.item) }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "That Item can not be found." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvIF EXPR = "{ NOT Check_Translation( l.lang_id, l.item_id, l.translation) }">
+		<MvFUNCTIONRETURN VALUE = "{ Add_Translation( l.lang_id, l.item_id, l.value) }" />
+	</MvIF>
+
+	<MvQUERY	NAME	= "Merchant"
+				QUERY	= "{ 'UPDATE ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Translations
+								SET
+									translation = ?
+								WHERE
+									lang_id = ? AND item_id = ?' }"
+				FIELDS	= "l.value, l.lang_id, l.item_id">
+
+	<MvIF EXPR = "{ g.MvQUERY_Error }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "{ 'An error has occured: ' $ g.MvQUERY_Error }" />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Check_Translation" PARAMETERS = "lang_id, item_id, translation var" STANDARDOUTPUTLEVEL = "">
+	<MvASSIGN NAME = "l.lang_id" VALUE = "{ trim( l.lang_id ) }">
+	<MvASSIGN NAME = "l.item_id" VALUE = "{ trim( l.item_id ) }">
+
+	<MvOPENVIEW	NAME	= "Merchant"
+				VIEW	= "PS_TRSNL_Translations"
+				QUERY	= "{ 'SELECT * FROM ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Translations WHERE lang_id = ? AND item_id = ?'}"
+				FIELDS	= "l.lang_id, l.item_id">
+	<MvIF EXPR = "{ g.MvOPENVIEW_Error }">
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Translations">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_Library_Utilities ].Error( 'ps_trsnl-LANG-1001:', 'An Error occured while trying to load a lanaguage ID.' ) }">
+	</MvIF>
+
+	<MvIF EXPR = "{ PS_TRSNL_Translations.d.EOF }">
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Translations">
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvASSIGN NAME = "l.translation" MEMBER = "lang_id" 		VALUE = "{ PS_TRSNL_Translations.d.lang_id }">
+	<MvASSIGN NAME = "l.translation" MEMBER = "item_id" 		VALUE = "{ PS_TRSNL_Translations.d.item_id }">
+	<MvASSIGN NAME = "l.translation" MEMBER = "translation"		VALUE = "{ PS_TRSNL_Translations.d.translation }">
+
+	<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Translations">
+	<MvFUNCTIONRETURN VALUE = "{ l.translation }">
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Add_Translation" PARAMETERS = "lang_id, item_id, value" STANDARDOUTPUTLEVEL = "">
+	<MvIF EXPR = "{ Check_Translation( l.lang_id, l.item_id, l.translation) }">
+		<MvFUNCTIONRETURN VALUE = "{ Update_Translation( l.lang_id, l.item_id, l.value) }" />
+	</MvIF>
+
+	<MvQUERY	NAME	= "Merchant"
+				QUERY	= "{ 'INSERT INTO ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Translations
+							(lang_id, item_id, translation)
+							VALUES
+							(?, ?, ?)' }"
+				FIELDS = "l.lang_id, l.item_id, l.value">
+
+	<MvIF EXPR = "{ g.MvQUERY_Error }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "An error has occured." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvFUNCTIONRETURN VALUE = 1>
+</MvFUNCTION>

@@ -1,4 +1,5 @@
 <MvCOMMENT>
+|	Load_All_Languages()
 |	JSON_Load_Languages()
 |	Load_Language_ID( id, language var )
 |	Load_Language_Code( code, language var )
@@ -8,9 +9,35 @@
 |	JSON_Delete_Language( id )
 |	Language_Update( id, code, prompt )
 |	JSON_Language_Update( id, code, prompt )
+|	Load_Languages_JSON_Columns()
 </MvCOMMENT>
 
 
+<MvFUNCTION NAME = "Load_All_Languages" PARAMETERS = "languages var" STANDARDOUTPUTLEVEL = "text, compresswhitespace">
+	<MvOPENVIEW	NAME	= "Merchant"
+				VIEW	= "PS_TRSNL_Lang"
+				QUERY	= "{ 'SELECT * FROM ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Lang' }">
+	<MvIF EXPR = "{ g.MvOPENVIEW_Error }">
+		<MvASSIGN NAME = "g.Validation_Message" VALUE = "{ g.MvOPENVIEW_Error }">
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Lang">
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
+
+	<MvASSIGN NAME = "l.count" VALUE = "1">
+
+	<MvWHILE EXPR = "{ NOT PS_TRSNL_Lang.d.EOF }">
+		<MvASSIGN NAME = "l.languages"	INDEX = "{ l.count }"	MEMBER = "id"		VALUE = "{ PS_TRSNL_Lang.d.id }" >
+		<MvASSIGN NAME = "l.languages"	INDEX = "{ l.count }"	MEMBER = "code"		VALUE = "{ PS_TRSNL_Lang.d.code }" >
+		<MvASSIGN NAME = "l.languages"	INDEX = "{ l.count }"	MEMBER = "prompt"	VALUE = "{ PS_TRSNL_Lang.d.prompt }" >
+
+		<MvASSIGN NAME = "l.count" VALUE = "{ l.count + 1 }">
+		<MvSKIP NAME = "Merchant" VIEW = "PS_TRSNL_Lang" ROWS = 1>
+	</MvWHILE>
+
+	<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Lang">
+
+	<MvFUNCTIONRETURN VALUE = "{ l.languages }">
+</MvFUNCTION>
 
 <MvFUNCTION NAME = "JSON_Load_Languages" STANDARDOUTPUTLEVEL = "text, compresswhitespace">
 	<MvASSIGN NAME = "g.Filter" VALUE = "{ trim( g.Filter ) }">
@@ -170,6 +197,15 @@
 		<MvASSIGN NAME = "g.Error_Message" VALUE = "An error has occured." />
 		<MvFUNCTIONRETURN VALUE = 0>
 	</MvIF>
+
+	<MvQUERY NAME 	= "Merchant"
+			 QUERY 	= "{ 'DELETE FROM ' $ g.Store_Table_Prefix $ 'PS_TRSNL_Translations WHERE lang_id = ?' }"
+			 FIELDS = "l.id">
+	<MvIF EXPR = "{ g.MvQUERY_Error }">
+		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
+		<MvASSIGN NAME = "g.Error_Message" VALUE = "An error has occured." />
+		<MvFUNCTIONRETURN VALUE = 0>
+	</MvIF>
 	<MvFUNCTIONRETURN VALUE = 1>
 </MvFUNCTION>
 
@@ -227,9 +263,7 @@
 				FIELDS	= "l.code, l.prompt, l.id">
 
 	<MvIF EXPR = "{ g.MvQUERY_Error }">
-		<MvASSIGN NAME = "g.Error_Code" VALUE = "code" />
-		<MvASSIGN NAME = "g.Error_Message" VALUE = "{ 'An error has occured: ' $ g.MvQUERY_Error }" />
-		<MvFUNCTIONRETURN VALUE = 0>
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Error(g.Error_Code, g.MvQUERY_Error ) }">
 	</MvIF>
 
 	<MvFUNCTIONRETURN VALUE = 1>
@@ -240,4 +274,43 @@
 		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Success() }">
 	</MvIF>
 	<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_FieldError( g.Error_Code, g.Error_Message ) }">
+</MvFUNCTION>
+
+<MvFUNCTION NAME = "Load_Languages_JSON_Columns" PARAMETERS = "" STANDARDOUTPUTLEVEL = "text, compresswhitespace">
+	<MvEVAL EXPR = "{ [ g.Module_Library_DB ].SQL_Query_SELECT( l.search_query,'s.*' ) }">
+
+	<MvEVAL EXPR = "{ [ g.Module_Library_DB ].SQL_Query_FROM( l.search_query, g.Store_Table_Prefix $ 'PS_TRSNL_Lang', 's' ) }">
+
+	<MvASSIGN NAME = "l.search_sql" VALUE = "{ [ g.Module_Library_DB].SQL_Query_Build( l.search_query, l.search_fields ) }">
+
+	<MvIF EXPR = "{ NOT [ g.Module_Library_DB ].SQL_Query_Count( l.search_query, l.total_count ) }">
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Lang">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Error(g.Error_Code, g.Error_Message ) }">
+	<MvELSEIF EXPR = "{ NOT [ g.Module_Library_Native_DBAPI ].DB_OPENVIEW_Range('Merchant', 'PS_TRSNL_Lang', l.search_sql, l.search_fields, g.Offset, g.Count) }">
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Lang">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Error( 'ps_trsnl-JSON-1001',g.MvOPENVIEW_Error ) }">
+	</MvIF>
+
+	<MvASSIGN NAME = "l.count" VALUE = 0>
+
+	<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Response_Start() }">
+		{
+			"data":
+				[
+					<MvWHILE EXPR = "{ ( NOT PS_TRSNL_Lang.d.EOF ) AND ( ( g.Count EQ 0 ) OR (l.count LT g.Count ) ) }">
+					<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_ArrayElement_Start( l.count )}">
+					"id": 			<MvEVAL EXPR = "{ int( PS_TRSNL_Lang.d.id ) }">,
+					"code" : 		"<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Encode( PS_TRSNL_Lang.d.code ) }">",
+					"prompt" : 		"<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Encode( PS_TRSNL_Lang.d.prompt ) }">",
+					"json_code" :	"<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Encode( 'Language[' $ l.count $ ']:' $ PS_TRSNL_Lang.d.code ) }">"
+					<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_ArrayElement_End() }">
+					<MvSKIP NAME = "Merchant" VIEW = "PS_TRSNL_Lang" ROWS = 1>
+					</MvWHILE>
+				],
+
+			"total_count": <MvEVAL EXPR = "{ int( l.total_count ) }">,
+			"start_offset": <MvEVAL EXPR = "{ int( g.Offset ) }">
+		}
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Lang">
+	}
 </MvFUNCTION>

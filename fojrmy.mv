@@ -274,7 +274,10 @@ sXX_PS_TRSNL_Translations
 		<MvFUNCTIONRETURN VALUE = "{ JSON_Delete_Item( g.Item_Id) }">
 	</MvIF>
 	<MvIF EXPR = "{ g.Module_Function EQ 'Item_Update' }">
-		<MvFUNCTIONRETURN VALUE = "{ JSON_Item_Update( g.id, g.code, g.prompt) }">
+		<MvFUNCTIONRETURN VALUE = "{ JSON_Item_Update( g.id, g.code, g.prompt, g.Language) }">
+	</MvIF>
+	<MvIF EXPR = "{ g.Module_Function EQ 'Load_Languages_JSON_Columns' }">
+		<MvFUNCTIONRETURN VALUE = "{ Load_Languages_JSON_Columns() }">
 	</MvIF>
 </MvFUNCTION>
 
@@ -318,6 +321,7 @@ sXX_PS_TRSNL_Translations
 
 <MvINCLUDE FILE = "functions/languages.mv">
 <MvINCLUDE FILE = "functions/items.mv">
+<MvINCLUDE FILE = "functions/languagesxitems.mv">
 
 
 <MvFUNCTION NAME = "Whoopsies" PARAMETERS = "step">

@@ -1,0 +1,115 @@
+<MvFUNCTION NAME = "JSON_Load_Items" STANDARDOUTPUTLEVEL = "text, compresswhitespace">
+
+	<MvASSIGN NAME = "g.Filter" VALUE = "{ trim( g.Filter ) }">
+	<MvASSIGN NAME = "g.Sort" VALUE = "{ trim( g.Sort ) }">
+	<MvASSIGN NAME = "g.Offset" VALUE = "{ trim( g.Offset ) }">
+	<MvASSIGN NAME = "g.Count" VALUE = "{ trim( g.Count ) }">
+	<MvASSIGN NAME = "g.form_id" VALUE = "{ trim(l.form_id) }">
+
+	<MvASSIGN NAME = "l.search_query"				VALUE = "">
+
+	<MvEVAL EXPR = "{ [ g.Module_Library_DB ].SQL_Query_SELECT( l.search_query, 'item.id					AS id,
+																				 item.code					AS item_code,
+																				 item.prompt				AS item_prompt,
+																				 translations.item_id		AS item_id,
+																				 translations.lang_id		AS lang_id,
+																				 translations.translation	AS translation' ) }">
+
+	<MvEVAL EXPR = "{ [ g.Module_Library_DB ].SQL_Query_FROM( l.search_query, g.Store_Table_Prefix $ 'PS_TRSNL_Items', 'item' ) }">
+	<MvEVAL EXPR = "{ [ g.Module_Library_DB ].SQL_Query_LEFT_OUTER_JOIN( l.search_query, 'item', g.Store_Table_Prefix $ 'PS_TRSNL_Translations', 'translations', 'item.id = translations.item_id', '' ) }">
+
+	<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Filter( l.search_query, g.Filter,	'id:item.id,
+																				 code:item.code,
+																				 prompt:item.prompt,
+																				 lang_id:translations.lang_id,
+																				 translation:translations.translation' ) }">
+
+	<MvEVAL EXPR = "{ [ g.Module_Library_DB ].SQL_Query_OrderBy_Fields( l.search_query, g.Sort,	'id:item.id,
+																								 code:item.code,
+																								 prompt:item.prompt,
+																								 lang_id:translations.lang_id,
+																								 translation:translations.translation',
+																								'item.id;translations.item_id' ) }">
+																			
+	<MvASSIGN NAME = "l.search_sql"			VALUE = "{ [ g.Module_Library_DB ].SQL_Query_Build( l.search_query, l.search_fields ) }">
+
+	<MvOPENVIEW NAME	= "Merchant"
+				VIEW	= "PS_TRSNL_Items"
+				QUERY	= "{ l.search_sql }"
+				FIELDS	= "{ l.search_fields }">
+	<MvIF EXPR = "{ g.MvOPENVIEW_Error }">
+		<MvFUNCTIONRETURN VALUE = "{ [ g.Module_JSON ].JSON_Response_Error( 'MER-ATT-JSN-00007', g.MvOPENVIEW_Error ) }">
+	</MvIF>
+
+	<MvASSIGN NAME = "l.total_count"		VALUE = 0>
+	<MvASSIGN NAME = "l.field_count"		VALUE = 0>
+	<MvASSIGN NAME = "l.lang_count"		VALUE = 0>
+	<MvASSIGN NAME = "l.last_item_id"	VALUE = 0>
+	<MvASSIGN NAME = "l.last_item"	VALUE = 0>
+
+	<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Response_Start() }">
+	{
+		"data":
+		[
+		<MvWHILE EXPR = "{ NOT PS_TRSNL_Items.d.EOF }">
+			<MvIF EXPR = "{ l.last_item_id NE PS_TRSNL_Items.d.id }">
+				<MvIF EXPR = "{ l.lang_count }">
+					<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_ArrayElement_End() }">
+					]
+				</MvIF>
+
+				<MvIF EXPR = "{ l.field_count }">
+					<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_ArrayElement_End() }">
+				</MvIF>
+
+				<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_ArrayElement_Start( l.field_count ) }">
+				"id": 		<MvEVAL EXPR = "{ int( PS_TRSNL_Items.d.id ) }">,
+				"code" : 	"<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Encode( PS_TRSNL_Items.d.code ) }">",
+				"prompt" : 	"<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Encode( PS_TRSNL_Items.d.prompt ) }">"
+				
+				<MvASSIGN NAME = "l.total_count"		VALUE = "{ l.total_count + 1 }">
+				<MvASSIGN NAME = "l.last_item_id"	VALUE = "{ PS_TRSNL_Items.d.id }">
+				<MvASSIGN NAME = "l.last_item"	VALUE = 0>
+				<MvASSIGN NAME = "l.lang_count"		VALUE = 0>
+			</MvIF>
+
+			<MvIF EXPR = "{ l.last_item NE PS_TRSNL_Items.d.item_id AND NOT ISNULL PS_TRSNL_Items.d.item_id }">
+				<MvIF EXPR = "{ l.lang_count }">
+					<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_ArrayElement_End() }">
+				</MvIF>
+
+				<MvIF EXPR = "{ NOT l.lang_count }">
+					, "languages":
+					[
+				</MvIF>
+
+				<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_ArrayElement_Start( l.lang_count ) }">
+				<MvASSIGN NAME = "l.success" VALUE = "{ Load_Language_ID( PS_TRSNL_Items.d.lang_id, l.current_language) }">
+				"lang_id":			<MvEVAL EXPR = "{ int( PS_TRSNL_Items.d.lang_id ) }">,
+				"item_id":			<MvEVAL EXPR = "{ int( PS_TRSNL_Items.d.item_id ) }">,
+				"translation":		"<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Encode( PS_TRSNL_Items.d.translation ) }">",
+				"language_code":	"<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_Encode( l.current_language:code ) }">"
+
+				<MvASSIGN NAME = "l.total_count"		VALUE = "{ l.total_count + 1 }">
+				<MvASSIGN NAME = "l.last_item"	VALUE = "{ PS_TRSNL_Items.d.item_id }">
+			</MvIF>
+
+			<MvSKIP NAME = "Merchant" VIEW = "PS_TRSNL_Items" ROWS = 1>
+		</MvWHILE>
+
+		<MvCLOSEVIEW NAME = "Merchant" VIEW = "PS_TRSNL_Items">
+
+		<MvIF EXPR = "{ l.lang_count }">
+			<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_ArrayElement_End() }">
+			]
+		</MvIF>
+
+		<MvIF EXPR = "{ l.field_count }">
+			<MvEVAL EXPR = "{ [ g.Module_JSON ].JSON_ArrayElement_End() }">
+		</MvIF>
+		],
+		"start_offset": 0,
+		"total_count": <MvEVAL EXPR = "{ int( l.total_count ) }">
+	}
+}
+</MvFUNCTION>
